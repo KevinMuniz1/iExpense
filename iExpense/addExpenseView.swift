@@ -15,7 +15,7 @@ struct addExpenseView: View {
     
     let types = ["Personal", "Business"]
     
-    var expense: Item
+    var expense: Expenses
     
     var body: some View {
         NavigationStack {
@@ -43,11 +43,16 @@ struct addExpenseView: View {
         }
     }
     func saveItem() {
-        let item = Expense(name: name, type: type, amount: amount)
+        let encoder = JSONEncoder()
+        let item = ExpenseItem(name: name, type: type, amount: amount)
         expense.expenses.append(item)
+        
+        if let data = try? encoder.encode(item) {
+            UserDefaults.standard.setValue(data, forKey: "item")
+        }
     }
 }
  
 #Preview {
-    addExpenseView(expense: Item())
+    addExpenseView(expense: Expenses())
 }

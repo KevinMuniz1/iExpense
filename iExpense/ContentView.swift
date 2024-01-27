@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-struct Expense: Identifiable, Codable {
+struct ExpenseItem: Identifiable, Codable {
     var id = UUID()
     let name: String
     let type: String
@@ -15,21 +15,41 @@ struct Expense: Identifiable, Codable {
 }
 
 @Observable
-class Item {
-    var expenses = [Expense]()
+class Expenses {
+    var expenses = [ExpenseItem]() {
+        didSet {
+            if let data = try? JSONEncoder().encode(expenses) {
+                UserDefaults.standard.setValue(data, forKey: "expenses")
+            }
+          }
+        }
+    init() {
+        if let savedItems = UserDefaults.standard.data(forKey: "expenses") {
+            if let decodedItems = try? JSONDecoder().decode([ExpenseItem].self, from: savedItems) {
+                expenses = decodedItems
+                return
+            }
+        }
+        expenses = []
+    }
 }
 
 struct ContentView: View {
-    @State private var items = Item()
+    @State private var items = Expenses()
     @State private var expenseViewIsShowing = false
     var body: some View {
         NavigationStack {
             List {
                 ForEach(items.expenses) { item in
-                    HStack{
-                        Text("Name: \(item.name)")
-                        Text("Type: \(item.type)")
-                        Text("Amount: \(item.amount.formatted())")
+                    HStack {
+                        VStack(alignment: .leading) {
+                            Text("\(item.name)")
+                                .font(.headline)
+                            Text("\(item.type)")
+                        }
+                        Spacer()
+                        
+                        Text(item.amount, format: .currency(code: "USD"))
                     }
                 }.onDelete(perform: deleteItem)
                 
@@ -43,10 +63,6 @@ struct ContentView: View {
                 addExpenseView(expense: items)
             }            .navigationTitle("iExpense")
         }
-    }
-    func addItem() {
-        let newItem = Expense(name: "test", type: "Financial", amount: 20.0)
-        items.expenses.append(newItem)
     }
     
     func deleteItem(offset: IndexSet) {
