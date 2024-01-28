@@ -15,7 +15,9 @@ struct addExpenseView: View {
     
     let types = ["Personal", "Business"]
     
-    var expense: Expenses
+    var personalExpense: personalExpenses
+    
+    var businessExpense: businessExpenses
     
     var body: some View {
         NavigationStack {
@@ -28,8 +30,7 @@ struct addExpenseView: View {
                             Text($0)
                         }
                     }
-                    TextField("Amount", value: $amount, format: .currency(code: "USD"))
-                    
+                    TextField("Amount", value: $amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
                 }
                     
                 .toolbar {
@@ -45,14 +46,21 @@ struct addExpenseView: View {
     func saveItem() {
         let encoder = JSONEncoder()
         let item = ExpenseItem(name: name, type: type, amount: amount)
-        expense.expenses.append(item)
+        if item.type == "Business" {
+            businessExpense.businessExpenses.append(item)
+            print(item)
+        } else {
+            personalExpense.personalExpenses.append(item)
+        }
         
         if let data = try? encoder.encode(item) {
             UserDefaults.standard.setValue(data, forKey: "item")
+        } else {
+            print("error")
         }
     }
 }
  
 #Preview {
-    addExpenseView(expense: Expenses())
+    addExpenseView(personalExpense: personalExpenses(), businessExpense: businessExpenses())
 }

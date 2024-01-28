@@ -15,44 +15,88 @@ struct ExpenseItem: Identifiable, Codable {
 }
 
 @Observable
-class Expenses {
-    var expenses = [ExpenseItem]() {
+class businessExpenses {
+    
+    var businessExpenses = [ExpenseItem]() {
         didSet {
-            if let data = try? JSONEncoder().encode(expenses) {
-                UserDefaults.standard.setValue(data, forKey: "expenses")
+            if let data = try? JSONEncoder().encode(businessExpenses) {
+                UserDefaults.standard.set(data, forKey: "businessExpenses")
             }
-          }
         }
+    }
     init() {
-        if let savedItems = UserDefaults.standard.data(forKey: "expenses") {
-            if let decodedItems = try? JSONDecoder().decode([ExpenseItem].self, from: savedItems) {
-                expenses = decodedItems
+        if let savedData = UserDefaults.standard.data(forKey: "businessExpenses") {
+            if let decoded = try? JSONDecoder().decode([ExpenseItem].self, from: savedData) {
+                businessExpenses = decoded
                 return
             }
         }
-        expenses = []
+        businessExpenses = []
+    }
+}
+
+@Observable
+class personalExpenses {
+    
+    
+    var personalExpenses = [ExpenseItem]() {
+        didSet {
+            if let data = try? JSONEncoder().encode(personalExpenses) {
+                UserDefaults.standard.set(data, forKey: "personalExpenses")
+            }
+          }
+        }
+    
+    init() {
+        if let savedItems = UserDefaults.standard.data(forKey: "personalExpenses") {
+            if let decodedItems = try? JSONDecoder().decode([ExpenseItem].self, from: savedItems) {
+                personalExpenses = decodedItems
+                return
+            }
+        }
+        personalExpenses = []
     }
 }
 
 struct ContentView: View {
-    @State private var items = Expenses()
+    @State private var personalItems = personalExpenses()
+    @State private var businessItems = businessExpenses()
     @State private var expenseViewIsShowing = false
     var body: some View {
         NavigationStack {
             List {
-                ForEach(items.expenses) { item in
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("\(item.name)")
-                                .font(.headline)
-                            Text("\(item.type)")
+                Section(!personalItems.personalExpenses.isEmpty ? "Personal Expenses" : "") {
+                    ForEach(personalItems.personalExpenses) { item in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text("\(item.name)")
+                                    .font(.headline)
+                                Text("\(item.type)")
+                            }
+                            Spacer()
+                            
+                            Text(item.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                .foregroundStyle(item.amount > 10 ? .red : .green)
+                                .font(item.amount > 100 ? .title : .headline)
                         }
-                        Spacer()
-                        
-                        Text(item.amount, format: .currency(code: "USD"))
-                    }
-                }.onDelete(perform: deleteItem)
-                
+                    }.onDelete(perform: deletePersonalItem)
+                }
+                Section(!businessItems.businessExpenses.isEmpty ? "Business Expenses" : "") {
+                    ForEach(businessItems.businessExpenses) { item in
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text("\(item.name)")
+                                    .font(.headline)
+                                Text("\(item.type)")
+                            }
+                            Spacer()
+                            
+                            Text(item.amount, format: .currency(code: Locale.current.currency?.identifier ?? "USD"))
+                                .foregroundStyle(item.amount > 10 ? .red : .green)
+                                .font(item.amount > 100 ? .title : .headline)
+                        }
+                    }.onDelete(perform: deleteBusinessItem)
+                }
                 
             }.toolbar {
                     Button("Add Expense", systemImage: "plus") {
@@ -60,13 +104,17 @@ struct ContentView: View {
                     }
             }
             .sheet(isPresented: $expenseViewIsShowing) {
-                addExpenseView(expense: items)
+                addExpenseView(personalExpense: personalItems, businessExpense: businessItems)
             }            .navigationTitle("iExpense")
         }
     }
     
-    func deleteItem(offset: IndexSet) {
-        items.expenses.remove(atOffsets: offset)
+    func deletePersonalItem(offset: IndexSet) {
+        personalItems.personalExpenses.remove(atOffsets: offset)
+    }
+    
+    func deleteBusinessItem(offset: IndexSet) {
+        businessItems.businessExpenses.remove(atOffsets: offset)
     }
     
 }
