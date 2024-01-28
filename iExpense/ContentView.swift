@@ -65,7 +65,7 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             List {
-                Section(!personalItems.personalExpenses.isEmpty ? "Personal Expenses" : "") {
+                Section(!personalItems.personalExpenses.isEmpty ? "Personal" : "") {
                     ForEach(personalItems.personalExpenses) { item in
                         HStack {
                             VStack(alignment: .leading) {
@@ -81,7 +81,7 @@ struct ContentView: View {
                         }
                     }.onDelete(perform: deletePersonalItem)
                 }
-                Section(!businessItems.businessExpenses.isEmpty ? "Business Expenses" : "") {
+                Section(!businessItems.businessExpenses.isEmpty ? "Business" : "") {
                     ForEach(businessItems.businessExpenses) { item in
                         HStack {
                             VStack(alignment: .leading) {
